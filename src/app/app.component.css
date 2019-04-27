@@ -1,0 +1,14 @@
+form {
+    min-width: 150px;
+    max-width: 500px;
+    margin: 50px auto;
+    width: 100%;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+ul {
+    margin: 0px;
+}

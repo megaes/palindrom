@@ -1,0 +1,92 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:1.15-alpine
+    depends_on:
+      - php-fpm
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - custom-network
+
+  php-fpm:
+    build:
+      context: ./docker/php-fpm
+    image: megaes/php-fpm-development:7.2.12
+    environment:
+      XDEBUG_CONFIG: "remote_enable=1 remote_connect_back=1"
+    env_file:
+      - ./docker/user.env
+    entrypoint:
+      - /var/www/html/docker/php-fpm/start.sh
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - custom-network
+
+  mysql:
+    build:
+      context: ./docker/mysql
+    image: megaes/mysql-development
+    env_file:
+      - ./docker/user.env
+      - ./.env
+    entrypoint:
+      - /var/www/html/docker/mysql/start.sh
+    volumes:
+      - mysql:/var/lib/mysql
+      - ./:/var/www/html
+    ports:
+      - "3306:3306"
+    networks:
+      - custom-network
+
+  node:
+    build:
+      context: ./docker/node
+    image: megaes/node-development:11.1.0
+    env_file:
+      - ./docker/user.env
+    entrypoint:
+      - /var/www/html/docker/base/start.sh
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - custom-network
+
+  bootstrap:
+    build:
+      context: ./docker/bootstrap
+    image: megaes/bootstrap
+    depends_on:
+      - php-fpm
+      - node
+      - mysql
+    entrypoint:
+      - /var/www/html/docker/bootstrap/start.sh
+    env_file:
+      - ./docker/user.env
+      - ./.env
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - custom-network
+
+  base:
+    build:
+      context: ./docker/base
+    image: megaes/base-development
+#    tty: true
+#    entrypoint:
+#      ash
+
+networks:
+  custom-network:
+
+volumes:
+  mysql:
+
